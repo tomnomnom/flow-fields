@@ -4,10 +4,10 @@ const ctx = stage.getContext('2d');
 const w = stage.width;
 const h = stage.height;
 
-const rows = 100;
-const cols = 100;
+const rows = 300;
+const cols = 400;
 const cellW = w/cols;
-const cellH = h/cols;
+const cellH = h/rows;
 
 const radToVec = rad => [Math.cos(rad), Math.sin(rad)];
 const addVec = ([x1, y1], [x2, y2]) => [x1+x2, y1+y2];
@@ -27,13 +27,23 @@ const particleRadius = 2;
 const randParticle = () => [Math.random()*w, Math.random()*h];
 const particles = Array.from({length: particleCount}, randParticle);
 
-const randLifetime = () => Math.floor(Math.random() * 60 * 5);
+const maxLifetime = 60*5;
+const randLifetime = () => Math.floor(Math.random() * maxLifetime);
 const lifetimes = Array.from({length: particleCount}, randLifetime);
 
-const field = Array.from({length: rows}, (_, y) => Array.from({length: cols}, (_, x) => {
+const field = Array.from({length: rows}, (_, y) => Array.from({length: cols}, (__, x) => {
+
     const xp = x/cols;
     const yp = y/rows;
-    return radToVec(Math.sin(xp*8 + yp*2));
+
+    const comps = [
+        Math.sin((x - y)*0.01),
+        Math.sin((xp * yp)*0.00001)*9,
+        Math.sin((x+y)*0.01)*9,
+    ];
+    const avg = comps.reduce((x, y) => x + y, 0) / comps.length;
+
+    return radToVec(avg * Math.PI);
 }));
 
 ctx.fillStyle = 'hsl(0 0 0)';
@@ -45,10 +55,17 @@ const draw = () => {
     ctx.rect(0, 0, w, h);
     ctx.fill();
 
-    ctx.fillStyle = 'hsl(0 0 255 / 1%)';
 
     for (let i = 0; i < particleCount; i++){
         const [x, y] = particles[i];
+
+        if (lifetimes[i]-- <= 0){
+            particles[i] = randParticle();
+            lifetimes[i] = randLifetime();
+        }
+
+        const hue = Math.floor(lifetimes[i]/maxLifetime*255)
+        ctx.fillStyle = 'hsl('+hue+' 210 200 / 1%)';
 
         ctx.beginPath();
         ctx.arc(x, y, particleRadius, 0, Math.PI*2);
@@ -58,10 +75,6 @@ const draw = () => {
         const fv = field[fy][fx];
         particles[i] = addVec(particles[i], fv);
 
-        if (lifetimes[i]-- <= 0){
-            particles[i] = randParticle();
-            lifetimes[i] = randLifetime();
-        }
     }
 
     window.requestAnimationFrame(draw);
