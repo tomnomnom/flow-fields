@@ -4,33 +4,26 @@ const ctx = stage.getContext('2d');
 const w = stage.width;
 const h = stage.height;
 
-const rows = 150;
-const cols = 400;
-const cellW = w/cols;
-const cellH = h/rows;
-
 const radToVec = rad => [Math.cos(rad), Math.sin(rad)];
 const addVec = ([x1, y1], [x2, y2]) => [x1+x2, y1+y2];
-const scaleVec = ([x, y], sc) => [x*sc, y*sc];
-const randAngle = () => Math.random() * 2 * Math.PI;
 
 const particleCount = 8000;
-const particleRadius = 2;
+const particleRadius = 1;
 const randParticle = () => [Math.random()*w, Math.random()*h];
 const particles = Array.from({length: particleCount}, randParticle);
 
-const maxLifetime = 60*5;
+const maxLifetime = 60;
 const randLifetime = () => Math.floor(Math.random() * maxLifetime);
 const lifetimes = Array.from({length: particleCount}, randLifetime);
 
 const calculateVector = ([x, y], t, l) => {
-    x = x/w*50;
+    x = x/w*20;
     y = y/h*20;
 
-    const n = Math.sin(x)+Math.sin(x*3)/3+Math.sin(x*5)/5 +
-              Math.sin(y)+Math.sin(y*3)/3+Math.sin(y*5)/5;
+    const n = Math.sin(x+y)+
+              Math.cos(x-y);
 
-    return radToVec(n * Math.PI * t/100000);
+    return radToVec(n * Math.PI * Math.log10(t/100));
 };
 
 ctx.fillStyle = 'hsl(0 0 0)';
